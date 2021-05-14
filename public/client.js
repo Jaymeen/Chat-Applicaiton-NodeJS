@@ -1,5 +1,6 @@
-const url = 'http://localhost:3000';
-const socket = io(url);
+let socket;
+const namespaces = ['/namespace1', '/namespace2', '/namespace3'];
+let i = 0;
 
 const textJoinRoomId = document.getElementById('join-room-text');
 const labelRoomId = document.getElementById('room-id');
@@ -27,24 +28,11 @@ function sendMessage() {
     }
 }
 
-socket.on('new-message', (message) => {
-    let internalDiv = document.createElement('div');
-    internalDiv.classList.add('col-md-12');
-    internalDiv.classList.add('text-left');
-    let paragraph = document.createElement('p');
-    paragraph.innerText = message;
-    internalDiv.appendChild(paragraph);
-    displayMessage.appendChild(internalDiv);
-});
-
-socket.on('message', (message) => {
-    console.log('Message : ' + message);
-});
-
 async function createRoom(element) {
     element.disabled = true;
+    setupSocket();
 
-    let output = await fetch(url + '/getId', {
+    let output = await fetch('/getId', {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json;charset=utf-8'
@@ -63,8 +51,9 @@ async function createRoom(element) {
 async function joinRoom(element) {
     //element.disabled = true;
     textRoom = textJoinRoomId.value;
+    setupSocket();
 
-    let output = await fetch(url + '/joinRoom?roomId=' + textRoom, {
+    let output = await fetch('/joinRoom?roomId=' + textRoom, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json;charset=utf-8'
@@ -80,4 +69,25 @@ async function joinRoom(element) {
     });
 
     socket.emit('join-room', { 'Room-ID': textRoom });
+}
+
+
+function setupSocket() {
+    const temp = namespaces[Math.floor(Math.random() * namespaces.length)];
+    console.log(temp);
+    socket = io(temp);
+    // socket = io();
+    socket.on('new-message', (message) => {
+        let internalDiv = document.createElement('div');
+        internalDiv.classList.add('col-md-12');
+        internalDiv.classList.add('text-left');
+        let paragraph = document.createElement('p');
+        paragraph.innerText = message;
+        internalDiv.appendChild(paragraph);
+        displayMessage.appendChild(internalDiv);
+    });
+
+    socket.on('message', (message) => {
+        console.log('Message : ' + message);
+    });
 }

@@ -6,18 +6,22 @@ const url_localhost = 'http://localhost:3000';
 //const url_local_network = 'http://Your IP:PORT';
 const io = require('socket.io')(http, {
     cors: {
-        origin: url_localhost,
+        origin: "*",
         methods: ["GET", "POST"]
     }
 });
 const port = 3000;
+
+const namespace1 = io.of('/namespace1');
+const namespace2 = io.of('/namespace2');
+const namespace3 = io.of('/namespace3');
 
 app.use(express.static('public'));
 
 app.get('/getId', (req, res) => {
     let newUUID = uuidv4();
     return res.json({
-        'ID': newUUID
+        'ID': '123' //newUUID
     });
 });
 
@@ -34,7 +38,11 @@ app.get('/joinRoom', (req, res) => {
     }
 });
 
-io.on('connect', (socket) => {
+namespace1.on('connect', socketHandler);
+namespace2.on('connect', socketHandler);
+namespace3.on('connect', socketHandler);
+
+function socketHandler(socket) {
     socket.send('Welcome Client !');
 
     socket.on('send-message', (data) => {
@@ -52,7 +60,7 @@ io.on('connect', (socket) => {
     socket.on('disconnect', () => {
         socket.send('GoodBye Client !');
     });
-});
+}
 
 http.listen(port, () => {
     console.log('Listening on PORT : ' + port);
